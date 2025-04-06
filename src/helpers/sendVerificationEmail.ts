@@ -31,12 +31,16 @@ export async function sendVerificationEmail(
       function (error, info) {
         if (error) {
           console.log(error);
+          return { success: false, message: "Failed to send verification email" };
         } else {
           console.log("Email sent: " + info.response);
+          return {
+            success: true,
+            message: "Verification email sent successfully",
+          };
         }
       }
     );
-
     return { success: true, message: "Verification email sent successfully" };
   } catch (error) {
     console.error("Failed to send verification email", error);

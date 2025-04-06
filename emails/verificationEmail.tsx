@@ -53,7 +53,7 @@ import {
                 src={logoUrl}
                 width="150"
                 height="50"
-                alt="WebLooop's Logo"
+                alt="Logo"
                 style={{
                   display: "block",
                   marginLeft: "auto",
