@@ -21,12 +21,21 @@ export async function sendVerificationEmail(
       React.createElement(VerificationEmail, { name, verificationCode })
     );
 
-    await transporter.sendMail({
-      from: process.env.EMAIL,
-      to: email,
-      subject: "Welcome to Our Service!",
-      html: emailHtml,
-    });
+    await transporter.sendMail(
+      {
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Welcome to Our Service!",
+        html: emailHtml,
+      },
+      function (error, info) {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log("Email sent: " + info.response);
+        }
+      }
+    );
 
     return { success: true, message: "Verification email sent successfully" };
   } catch (error) {
