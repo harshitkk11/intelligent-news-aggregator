@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -28,12 +28,13 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof SignupSchema>>({
     resolver: zodResolver(SignupSchema),
@@ -44,9 +45,9 @@ export function SignUpForm({
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof SignupSchema>) => {
-    setIsLoading(true);
+  const { isSubmitting } = form.formState;
 
+  const onSubmit = async (values: z.infer<typeof SignupSchema>) => {
     try {
       const response = await axios.post<
         ApiResponse<{ userId: string; email: string }>
@@ -65,6 +66,7 @@ export function SignUpForm({
       }
 
       form.reset();
+      router.push(`/verify?id=${data.userId}&email=${data.email}`);
     } catch (error: unknown) {
       const errorMessage =
         axios.isAxiosError(error) && error.response?.data?.message
@@ -75,8 +77,6 @@ export function SignUpForm({
 
       console.error("An unexpected error occurred during signup", error);
       toast.error(errorMessage);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -120,7 +120,7 @@ export function SignUpForm({
                         <Input
                           type="text"
                           placeholder="Full Name"
-                          disabled={isLoading}
+                          disabled={isSubmitting}
                           {...field}
                         />
                       </FormControl>
@@ -139,7 +139,7 @@ export function SignUpForm({
                         <Input
                           type="email"
                           placeholder="Email Address"
-                          disabled={isLoading}
+                          disabled={isSubmitting}
                           {...field}
                         />
                       </FormControl>
@@ -157,7 +157,7 @@ export function SignUpForm({
                         <Input
                           type="password"
                           placeholder="Password"
-                          disabled={isLoading}
+                          disabled={isSubmitting}
                           {...field}
                         />
                       </FormControl>
@@ -166,8 +166,12 @@ export function SignUpForm({
                   )}
                 />
 
-                <Button type="submit" disabled={isLoading} className="w-full">
-                  {isLoading ? (
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full"
+                >
+                  {isSubmitting ? (
                     <LoaderCircle className="animate-spin !w-5 !h-5" />
                   ) : (
                     "Sign up"

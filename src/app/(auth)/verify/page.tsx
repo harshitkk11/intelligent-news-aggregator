@@ -1,8 +1,7 @@
+import { VerifyForm } from "../_components/verification-form";
 import { GalleryVerticalEnd } from "lucide-react";
 
-import { SignUpForm } from "@/components/forms/signup-form";
-
-export default function LoginPage() {
+export default function VerifyPage() {
   return (
     <div className="bg-muted flex min-h-svh flex-col items-center justify-center gap-6 p-6 md:p-10">
       <div className="flex w-full max-w-sm flex-col gap-6">
@@ -12,7 +11,7 @@ export default function LoginPage() {
           </div>
           Acme Inc.
         </a>
-        <SignUpForm />
+        <VerifyForm />
       </div>
     </div>
   );

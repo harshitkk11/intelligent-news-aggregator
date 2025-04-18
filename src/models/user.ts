@@ -7,6 +7,8 @@ interface UserType extends Document {
   avatar: string;
   verificationCode: string;
   verifyCodeExpiry: Date;
+  resendAttempts: number;
+  resendAttemptsReset: Date;
   isEmailVerified: boolean;
   passwordResetToken: string;
   passwordResetExpires: Date;
@@ -31,6 +33,13 @@ const usersSchema: Schema<UserType> = new Schema(
     },
     verificationCode: { type: String, required: true },
     verifyCodeExpiry: { type: Date, required: true },
+    resendAttempts: {
+      type: Number,
+      default: 0,
+    },
+    resendAttemptsReset: {
+      type: Date,
+    },
     isEmailVerified: { type: Boolean, default: false },
     passwordResetToken: { type: String },
     passwordResetExpires: { type: Date },
