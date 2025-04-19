@@ -1,8 +1,7 @@
 import { GalleryVerticalEnd } from "lucide-react";
+import { ForgotPasswordForm } from "../_components/forgot-password-form";
 
-import { LoginForm } from "../_components/login-form";
-
-export default function LoginPage() {
+export default function ForgotPasswordPage() {
   return (
     <div className="flex w-full max-w-sm flex-col gap-6">
       <a href="#" className="flex items-center gap-2 self-center font-medium">
@@ -11,7 +10,7 @@ export default function LoginPage() {
         </div>
         Acme Inc.
       </a>
-      <LoginForm />
+      <ForgotPasswordForm />
     </div>
   );
 }

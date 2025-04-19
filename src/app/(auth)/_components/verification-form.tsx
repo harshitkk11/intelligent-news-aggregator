@@ -149,60 +149,65 @@ export function VerifyForm({
             )}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-2">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-6">
-              <FormField
-                control={form.control}
-                name="verificationCode"
-                render={({ field }) => (
-                  <FormItem className="w-full grid gap-3">
-                    <FormLabel>Verification Code</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="text"
-                        placeholder="Enter 6-digit code"
-                        disabled={!userId || !email || isSubmitting}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full"
-                disabled={!userId || !email || isSubmitting}
+        <CardContent>
+          <div className="grid gap-6">
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="grid gap-6"
               >
-                {isSubmitting ? (
-                  <LoaderCircle className="animate-spin !w-5 !h-5" />
-                ) : (
-                  "Verify Code"
-                )}
-              </Button>
-            </form>
-          </Form>
+                <FormField
+                  control={form.control}
+                  name="verificationCode"
+                  render={({ field }) => (
+                    <FormItem className="w-full grid gap-3">
+                      <FormLabel>Verification Code</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="text"
+                          placeholder="Enter 6-digit code"
+                          disabled={!userId || !email || isSubmitting}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <div className="flex flex-wrap justify-center items-center gap-1">
-            <p className="text-sm text-center text-muted-foreground">
-              {isResendDisabled && userId && email
-                ? `Resend Code in ${timer} sec`
-                : "Didn't receive the code?"}
-            </p>
-            {(!isResendDisabled || !userId || !email) && (
-              <Button
-                onClick={handleResendCode}
-                variant="link"
-                size="default"
-                disabled={!userId || !email || isSubmitting}
-                className="text-sm text-blue-600 dark:text-blue-400 p-0 !no-underline h-auto cursor-pointer"
-              >
-                Resend
-              </Button>
-            )}
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full"
+                  disabled={!userId || !email || isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <LoaderCircle className="animate-spin !w-5 !h-5" />
+                  ) : (
+                    "Verify Code"
+                  )}
+                </Button>
+              </form>
+            </Form>
+
+            <div className="flex flex-wrap justify-center items-center gap-1">
+              <p className="text-sm text-center text-muted-foreground">
+                {isResendDisabled && userId && email
+                  ? `Resend Code in ${timer} sec`
+                  : "Didn't receive the code?"}
+              </p>
+              {(!isResendDisabled || !userId || !email) && (
+                <Button
+                  onClick={handleResendCode}
+                  variant="link"
+                  size="default"
+                  disabled={!userId || !email || isSubmitting}
+                  className="text-sm text-blue-600 dark:text-blue-400 p-0 !no-underline h-auto cursor-pointer"
+                >
+                  Resend
+                </Button>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
