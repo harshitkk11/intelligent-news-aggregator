@@ -1,18 +1,23 @@
-import dbConnect from "@/lib/dbConnect";
-import { User } from "@/models/user";
+import { supabase } from "@/lib/dbConnect";
 import { createSession } from "@/lib/session";
 
 export async function POST(request: Request) {
-  await dbConnect();
-
   try {
     const { userId, verificationCode } = await request.json();
 
-    const user = await User.findById(userId);
+    const { data: user, error: fetchError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", userId)
+      .single();
 
-    if (!user) {
+    if (fetchError || !user) {
+      console.error("Error fetching user:", fetchError?.message);
       return Response.json(
-        { success: false, message: "User not found" },
+        {
+          success: false,
+          message: fetchError ? fetchError.message : "User not found",
+        },
         { status: 404 }
       );
     }
@@ -32,10 +37,22 @@ export async function POST(request: Request) {
       );
     }
 
-    user.isEmailVerified = true;
-    user.verifyCodeExpiry = new Date(); // Clear the verification expiry
-    user.verificationCode = " "; // Clear verification code after successful verification
-    await user.save();
+    const { error: updateError } = await supabase
+    .from("users")
+    .update({
+      isEmailVerified: true,
+      verifyCodeExpiry: new Date().toISOString(),
+      verificationCode: " ", // Clearing the code
+    })
+    .eq("id", userId);
+
+    if (updateError) {
+      console.error("Error updating user:", updateError.message);
+      return Response.json(
+        { success: false, message: "Failed to verify email" },
+        { status: 500 }
+      );
+    }
 
     await createSession(userId);
 

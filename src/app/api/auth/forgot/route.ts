@@ -1,23 +1,22 @@
-import dbConnect from "@/lib/dbConnect";
-import { User } from "@/models/user";
+import { supabase } from "@/lib/dbConnect";
 import crypto from "crypto";
 import { SendResetPassword } from "@/helpers/sendResetPassword";
 
 export async function POST(request: Request) {
-  await dbConnect();
-
   try {
     const { email } = await request.json();
 
     const normalizedEmail = email.toLowerCase();
 
     // Check if email already exists in the database.
-    const user = await User.findOne({
-      email: normalizedEmail,
-    });
+    const { data: user, error: fetchError } = await supabase
+      .from("users")
+      .select("email, isEmailVerified, id, name")
+      .eq("email", normalizedEmail)
+      .single();
 
     // If user not exist or email is not verified return an error.
-    if (!user || !user.isEmailVerified) {
+    if (fetchError || !user || !user.isEmailVerified) {
       return Response.json(
         {
           success: false,
@@ -37,9 +36,24 @@ export async function POST(request: Request) {
     const tokenExpiry = new Date(Date.now() + 60 * 60 * 1000); // 1 hour expiry
 
     // Save the token and expiry to the user document
-    user.passwordResetToken = hashedToken;
-    user.passwordResetExpires = tokenExpiry;
-    await user.save();
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({
+        passwordResetToken: hashedToken,
+        passwordResetExpires: tokenExpiry,
+      })
+      .eq("id", user.id);
+
+    if (updateError) {
+      console.error("Error updating user:", updateError.message);
+      return Response.json(
+        {
+          success: false,
+          message: "Failed to save reset token",
+        },
+        { status: 500 }
+      );
+    }
 
     const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
 

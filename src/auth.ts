@@ -2,9 +2,8 @@ import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 // import Credentials from "next-auth/providers/credentials";
 
-import dbConnect from "@/lib/dbConnect";
-import { User } from "@/models/user";
-import { createSession } from "@/lib/session";
+import { supabase } from "@/lib/dbConnect";
+// import { createSession } from "@/lib/session";
 
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
@@ -64,29 +63,46 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     async signIn({ user }) {
-      await dbConnect();
       try {
-        const existingUser = await User.findOne({ email: user.email });
+        const { data: existingUser, error: fetchError } = await supabase
+          .from("users")
+          .select("id")
+          .eq("email", user.email)
+          .single();
+
+        if (fetchError && fetchError.code !== "PGRST116") {
+          // PGRST116 = no rows found (expected sometimes)
+          console.error("Error fetching user:", fetchError.message);
+          return false;
+        }
 
         if (!existingUser) {
           const randomPassword = crypto.randomBytes(16).toString("hex");
           const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-          const newUser = await User.create({
-            name: user.name,
-            email: user.email,
-            avatar: user.image as string,
-            password: hashedPassword,
-            verificationCode: " ",
-            verifyCodeExpiry: new Date(),
-            isEmailVerified: true,
-          });
+          const { error: insertError } = await supabase
+          .from("users")
+          .insert([
+            {
+              name: user.name,
+              email: user.email,
+              avatar: user.image as string,
+              password: hashedPassword,
+              verificationCode: " ", // Empty string
+              verifyCodeExpiry: new Date(),
+              isEmailVerified: true,
+            },
+          ]);
+          if (insertError) {
+            console.error("Error inserting new user:", insertError.message);
+            return false;
+          }
 
-          await createSession(newUser._id.toString());
-          return true;
+          // await createSession(newUser._id.toString());
+          // return true;
         }
 
-        await createSession(existingUser._id.toString());
+        // await createSession(existingUser._id.toString());
         return true;
       } catch (error) {
         console.error(error);

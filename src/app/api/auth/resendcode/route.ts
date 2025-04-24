@@ -1,16 +1,17 @@
-import dbConnect from "@/lib/dbConnect";
-import { User } from "@/models/user";
+import { supabase } from "@/lib/dbConnect";
 import { sendVerificationEmail } from "@/helpers/sendVerificationEmail";
 
 export async function POST(request: Request) {
-  await dbConnect();
-
   try {
     const { userId } = await request.json();
 
-    const user = await User.findById(userId);
+    const { data: user, error: fetchError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", userId)
+      .single();
 
-    if (!user) {
+    if (!user || fetchError) {
       return Response.json(
         { success: false, message: "User not found" },
         { status: 404 }
@@ -28,19 +29,25 @@ export async function POST(request: Request) {
       );
     }
 
+    const now = new Date();
+    const resendResetDate = user.resendAttemptsReset
+      ? new Date(user.resendAttemptsReset)
+      : new Date(0);
+
+    let resendAttempts = user.resendAttempts || 0;
+    let resendAttemptsReset = resendResetDate;
+
     // Reset resendAttempts if time has passed
-    if (!user.resendAttemptsReset || user.resendAttemptsReset < new Date()) {
-      user.resendAttempts = 0;
-      const nextReset = new Date();
-      nextReset.setDate(nextReset.getDate() + 1); // 24 hours later
-      user.resendAttemptsReset = nextReset;
+    if (resendResetDate < now) {
+      resendAttempts = 0;
+      resendAttemptsReset = new Date();
+      resendAttemptsReset.setDate(resendAttemptsReset.getDate() + 1); // 24 hours later
     }
 
     // Check if user exceeded allowed attempts
-    if (user.resendAttempts >= 3) {
+    if (resendAttempts >= 3) {
       const hoursLeft = Math.ceil(
-        (user.resendAttemptsReset.getTime() - new Date().getTime()) /
-          (1000 * 60 * 60)
+        (resendAttemptsReset.getTime() - now.getTime()) / (1000 * 60 * 60)
       );
       return Response.json(
         {
@@ -59,10 +66,26 @@ export async function POST(request: Request) {
     const verifyCodeExpiry = new Date();
     verifyCodeExpiry.setMinutes(verifyCodeExpiry.getMinutes() + 15);
 
-    user.verificationCode = verificationCode;
-    user.verifyCodeExpiry = verifyCodeExpiry;
-    user.resendAttempts += 1;
-    await user.save();
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({
+        verificationCode,
+        verifyCodeExpiry,
+        resendAttempts: resendAttempts + 1,
+        resendAttemptsReset,
+      })
+      .eq("id", userId);
+
+    if (updateError) {
+      console.error(
+        "/API/RESEND_CODE: Failed to update user:",
+        updateError.message
+      );
+      return Response.json(
+        { success: false, message: "Failed to prepare verification email" },
+        { status: 500 }
+      );
+    }
 
     const emailResponse = await sendVerificationEmail(
       user.name,
@@ -71,9 +94,15 @@ export async function POST(request: Request) {
     );
 
     if (!emailResponse.success) {
-      user.verifyCodeExpiry = new Date();
-      user.verificationCode = " ";
-      user.resendAttempts -= 1;
+      await supabase
+        .from("users")
+        .update({
+          verificationCode: null,
+          verifyCodeExpiry: null,
+          resendAttempts, // Roll back one attempt
+        })
+        .eq("id", userId);
+
       return Response.json(
         {
           success: false,

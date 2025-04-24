@@ -8,7 +8,8 @@ export default function NotFound() {
         </h1>
       <h2 className="text-xl sm:text-2xl font-bold">Not Found</h2>
       <p className="min-w-[200px] max-w-[400px] text-base sm:text-lg md:text-xl text-secondary-foreground opacity-80">
-        Could not find requested page
+        We couldn&apos;t find the page that you were looking for.
+        <br /> Please check the URL or return to the home page.
       </p>
       <Link
         href="/"
