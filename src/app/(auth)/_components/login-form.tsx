@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
 import GoogleAuth from "./GoogleAuth";
+import { signIn } from "next-auth/react";
 
 export function LoginForm({
   className,
@@ -45,19 +46,21 @@ export function LoginForm({
 
   const onSubmit = async (values: z.infer<typeof LoginSchema>) => {
     try {
-      const response = await axios.post<ApiResponse>(
-        "/api/auth/login",
-        values,
-        {
+      const response = await axios.post<ApiResponse<{ email: string }>>("/api/auth/login", values, {
           withCredentials: true,
-        }
-      );
+        });
 
-      const { success, message } = response.data;
+      const { success, message, data: user } = response.data;
 
-      if (!success) {
+      if (!success || !user) {
         throw new Error(message);
       }
+
+      await signIn("credentials", {
+        email: user.email,
+        password: "dummy-password", // Use a dummy since it's required
+        redirect: false,
+      });
 
       form.reset();
       window.location.href = `/`;

@@ -3,7 +3,7 @@ import { deleteSession } from "@/lib/session";
 
 export async function GET() {
   try {
-    deleteSession();
+    await deleteSession();
     return Response.json(
       { success: true, message: "Session deleted successfully" },
       { status: 200 }

@@ -1,21 +1,22 @@
-import dbConnect from "@/lib/dbConnect";
-import { User } from "@/models/user";
+import { supabase } from "@/lib/dbConnect";
 import crypto from "crypto";
 
 export async function POST(request: Request) {
-  await dbConnect();
-
   try {
     const { token } = await request.json();
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    console.log("Hashed token:", hashedToken);
 
-    const user = await User.findOne({
-      passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: new Date() },
-    });
+    const { data: user, error: fetchError } = await supabase
+      .from("users")
+      .select("passwordResetToken, passwordResetExpires")
+      .eq("passwordResetToken", hashedToken)
+      .gte("passwordResetExpires", new Date().toISOString())
+      .single();
+    console.log("User data:", user, "Fetch error:", fetchError);
 
-    if (!user) {
+    if (!user || fetchError) {
       return Response.json(
         { success: false, message: "Invalid or expired token" },
         { status: 400 }

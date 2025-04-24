@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { signIn } from "next-auth/react";
 
 export function VerifyForm({
   className,
@@ -95,7 +96,7 @@ export function VerifyForm({
 
   const onSubmit = async (values: z.infer<typeof VerifyCodeSchema>) => {
     try {
-      const response = await axios.post<ApiResponse>(
+      const response = await axios.post<ApiResponse<{ email: string }>>(
         "/api/auth/verifycode",
         { userId, verificationCode: values.verificationCode },
         {
@@ -103,11 +104,17 @@ export function VerifyForm({
         }
       );
 
-      const { success, message } = response.data;
+      const { success, message, data: user } = response.data;
 
-      if (!success) {
+      if (!success || !user) {
         throw new Error(message);
       }
+
+      await signIn("credentials", {
+        email: user.email,
+        password: "dummy-password", // Use a dummy since it's required
+        redirect: false,
+      });
 
       form.reset();
       window.location.href = `/`;

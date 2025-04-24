@@ -1,21 +1,20 @@
-import dbConnect from "@/lib/dbConnect";
-import { createSession } from "@/lib/session";
-import { User } from "@/models/user";
+import { supabase } from "@/lib/dbConnect";
+// import { createSession } from "@/lib/session";
 import bcrypt from "bcryptjs";
 
 export async function POST(request: Request) {
-  await dbConnect();
-
   try {
     const { email, password } = await request.json();
 
     const normalizedEmail = email.toLowerCase();
 
-    const user = await User.findOne({ email: normalizedEmail }).select(
-      "+password"
-    );
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("id, password, isEmailVerified")
+      .eq("email", normalizedEmail)
+      .single();
 
-    if (!user) {
+    if (error || !user) {
       return Response.json(
         {
           success: false,
@@ -46,14 +45,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const userId = user._id.toString();
-
-    await createSession(userId);
+    // await createSession(user.id);
 
     return Response.json(
       {
         success: true,
-        message: "Login successful",
+        message: "Valid credentials",
+        data: {
+          id: user.id,
+          email: normalizedEmail,
+        },
       },
       { status: 200 }
     );

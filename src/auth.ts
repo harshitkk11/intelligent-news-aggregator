@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
-// import Credentials from "next-auth/providers/credentials";
+import Credentials from "next-auth/providers/credentials";
 
 import { supabase } from "@/lib/dbConnect";
 // import { createSession } from "@/lib/session";
@@ -11,55 +11,38 @@ import crypto from "crypto";
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Google,
-    // Credentials({
-    //   name: "Credentials",
-    //   credentials: {
-    //     email: {
-    //       label: "Email",
-    //       type: "email",
-    //       placeholder: "you@example.com",
-    //     },
-    //     password: { label: "Password", type: "password" },
-    //   },
-    //   async authorize(credentials) {
-    //     await dbConnect();
+    Credentials({
+      name: "Credentials",
+      credentials: {
+        email: {
+          label: "Email",
+          type: "email",
+        },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          throw new Error("Missing email or password");
+        }
 
-    //     if (!credentials?.email || !credentials?.password) {
-    //       throw new Error("Missing email or password");
-    //     }
+        const normalizedEmail = credentials.email;
 
-    //     const normalizedEmail = credentials.email;
+        const { data: user, error } = await supabase
+          .from("users")
+          .select("id, email, isEmailVerified")
+          .eq("email", normalizedEmail)
+          .single();
 
-    //     const user = await User.findOne({ email: normalizedEmail }).select(
-    //       "+password"
-    //     );
+        if (error || !user || !user.isEmailVerified) {
+          throw new Error("Invalid or unverified user");
+        }
 
-    //     if (!user) {
-    //       throw new Error("User not found");
-    //     }
-
-    //     if (!user.isEmailVerified) {
-    //       throw new Error("Email not verified");
-    //     }
-
-    //     const isPasswordValid = await bcrypt.compare(
-    //       credentials.password,
-    //       user.password
-    //     );
-    //     if (!isPasswordValid) {
-    //       throw new Error("Incorrect email or password");
-    //     }
-
-    //     await createSession(user._id.toString());
-
-    //     return {
-    //       id: user._id.toString(),
-    //       name: user.name,
-    //       email: user.email,
-    //       image: user.avatar,
-    //     };
-    //   },
-    // }),
+        return {
+          id: user.id,
+          email: user.email,
+        };
+      },
+    }),
   ],
   callbacks: {
     async signIn({ user }) {
@@ -80,29 +63,35 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           const randomPassword = crypto.randomBytes(16).toString("hex");
           const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
-          const { error: insertError } = await supabase
-          .from("users")
-          .insert([
-            {
-              name: user.name,
-              email: user.email,
-              avatar: user.image as string,
-              password: hashedPassword,
-              verificationCode: " ", // Empty string
-              verifyCodeExpiry: new Date(),
-              isEmailVerified: true,
-            },
-          ]);
-          if (insertError) {
-            console.error("Error inserting new user:", insertError.message);
+          const { data: newUser, error: insertError } = await supabase
+            .from("users")
+            .insert([
+              {
+                name: user.name,
+                email: user.email,
+                avatar: user.image as string,
+                password: hashedPassword,
+                verificationCode: null,
+                verifyCodeExpiry: null,
+                isEmailVerified: true,
+              },
+            ])
+            .select("id")
+            .single();
+
+          if (!newUser || insertError) {
+            console.error(
+              "Error inserting new user:",
+              insertError?.message || "Unknown error"
+            );
             return false;
           }
 
-          // await createSession(newUser._id.toString());
-          // return true;
+          // await createSession(newUser.id);
+          return true;
         }
 
-        // await createSession(existingUser._id.toString());
+        // await createSession(existingUser.id.toString());
         return true;
       } catch (error) {
         console.error(error);

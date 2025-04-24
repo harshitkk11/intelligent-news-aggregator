@@ -1,30 +1,29 @@
 "use client";
 
 import React from "react";
-import { useSession } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { LogOut } from "lucide-react";
 import axios from "axios";
 import { toast } from "sonner";
-import { ApiResponse } from "@/types/apiResponse";
+// import { ApiResponse } from "@/types/apiResponse";
 
 const NavBar = () => {
   const session = useSession();
 
-  console.log(session);
-
   const handleLogout = async () => {
     try {
-      const response = await axios.get<ApiResponse>(`/api/auth/logout`, {
-        withCredentials: true,
-      });
+      await signOut({ redirect: false });
+      // const response = await axios.get<ApiResponse>(`/api/auth/logout`, {
+      //   withCredentials: true,
+      // });
 
-      const { success, message } = response.data;
+      // const { success, message } = response.data;
 
-      if (!success) {
-        throw new Error(message);
-      }
+      // if (!success) {
+      //   throw new Error(message);
+      // }
 
       window.location.reload();
     } catch (error) {
@@ -42,8 +41,8 @@ const NavBar = () => {
 
   return (
     <header className="w-full h-[65px] px-5 flex justify-end items-center bg-secondary">
-      {/* {session.status !== "loading" &&
-        (session.status === "unauthenticated" ? ( */}
+      {session.status !== "loading" &&
+        (session.status === "unauthenticated" ? (
           <div className="flex items-center gap-3">
             <Link href="/login" className="cursor-pointer">
               <Button>Login</Button>
@@ -52,7 +51,7 @@ const NavBar = () => {
               <Button>Sign up</Button>
             </Link>
           </div>
-        {/* ) : ( */}
+        ) : (
           <Button
             onClick={handleLogout}
             variant="ghost"
@@ -61,7 +60,7 @@ const NavBar = () => {
             <LogOut className="!w-5 !h-5" />
             Log out
           </Button>
-        {/* ))} */}
+        ))}
     </header>
   );
 };

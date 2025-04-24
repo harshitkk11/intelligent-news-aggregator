@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/dbConnect";
-import { createSession } from "@/lib/session";
+// import { createSession } from "@/lib/session";
 
 export async function POST(request: Request) {
   try {
@@ -38,13 +38,13 @@ export async function POST(request: Request) {
     }
 
     const { error: updateError } = await supabase
-    .from("users")
-    .update({
-      isEmailVerified: true,
-      verifyCodeExpiry: new Date().toISOString(),
-      verificationCode: " ", // Clearing the code
-    })
-    .eq("id", userId);
+      .from("users")
+      .update({
+        isEmailVerified: true,
+        verifyCodeExpiry: null,
+        verificationCode: null,
+      })
+      .eq("id", userId);
 
     if (updateError) {
       console.error("Error updating user:", updateError.message);
@@ -54,14 +54,18 @@ export async function POST(request: Request) {
       );
     }
 
-    await createSession(userId);
+    // await createSession(userId);
 
     return Response.json(
       {
         success: true,
         message: "Email verified successfully",
+        data: {
+          id: userId,
+          email: user.email,
+        },
       },
-      { status: 201 }
+      { status: 200 }
     );
   } catch (error) {
     console.error("Failed to verify code", error);

@@ -1,34 +1,45 @@
-import dbConnect from "@/lib/dbConnect";
-import { User } from "@/models/user";
+import { supabase } from "@/lib/dbConnect";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
 export async function POST(request: Request) {
-  await dbConnect();
-
   try {
     const { token, newPassword } = await request.json();
 
     const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-    const user = await User.findOne({
-      passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: new Date() },
-    });
+    const { data: user, error: fetchError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("passwordResetToken", hashedToken)
+      .gte("passwordResetExpires", new Date().toISOString())
+      .single();
 
-    if (!user) {
+    if (!user || fetchError) {
       return Response.json(
-        { success: false, message: "User not found" },
+        { success: false, message: "User not found or token expired" },
         { status: 404 }
       );
     }
 
     const hashedPassword = bcrypt.hashSync(newPassword);
-    user.password = hashedPassword;
 
-    user.passwordResetToken = "";
-    user.passwordResetExpires = new Date();
-    await user.save();
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({
+        password: hashedPassword,
+        passwordResetToken: null,
+        passwordResetExpires: null,
+      })
+      .eq("id", user.id);
+
+    if (updateError) {
+      console.error("/API/AUTH/RESET_PASSWORD: Supabase update error:", updateError.message);
+      return Response.json(
+        { success: false, message: "Failed to reset password" },
+        { status: 500 }
+      );
+    }
 
     return Response.json(
       { success: true, message: "Password reset successful" },
