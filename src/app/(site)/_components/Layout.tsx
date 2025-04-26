@@ -102,7 +102,7 @@ const Layout = ({ allNews }: Props) => {
             </Button>
           </div>
         ) : (
-          <div className="px-5 md:px-0">
+          <div className="w-full px-5 md:px-0">
             <h2 className="mb-3 text-3xl font-semibold text-pretty md:mb-4 md:text-4xl lg:mb-6 lg:max-w-3xl lg:text-5xl">
               <span className="inline">{`Hottest News of the Day`}</span>
               <span className="inline-block ml-2 align-middle">
