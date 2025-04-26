@@ -16,7 +16,7 @@ export const SendResetPassword = async (
 
     await transporter.sendMail(
       {
-        from: process.env.EMAIL_USER,
+        from: `INA ${process.env.EMAIL_USER}`,
         to: email,
         subject: "Account Password Reset",
         html: emailHtml,
