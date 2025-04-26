@@ -15,21 +15,25 @@ import Link from "next/link";
 import NewsCard from "./NewsCard";
 import { useSession } from "next-auth/react";
 import TopNewsCard from "./TopNewsCard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export interface News {
   id: string;
   title: string;
   description: string;
   summary: string;
-  source: string;
+  sentiment_label: string;
+  sentiment_score: number;
   category: string;
-  publishedDate: Date;
-  readTime: number;
-  sentiment: string;
-  imageUrl: string;
+  published_at: string;
+  source: string;
+  link: string;
+  image_url: string;
+  persons: string;
+  organizations: string;
+  locations: string;
+  read_time: number;
   popularity: number;
-  relevanceScore: number;
-  url: string;
 }
 
 interface Props {
@@ -67,10 +71,21 @@ const Layout = ({ allNews }: Props) => {
     setMounted(true);
   }, []);
 
+  const isLoading = session.status === "loading";
+  const isUnauthenticated = session.status === "unauthenticated";
+
   return (
     <section className="w-full py-12 px-0">
       <div className="w-full container mx-auto flex flex-col items-center gap-16 lg:px-16">
-        {mounted && session.status !== "authenticated" ? (
+        {!mounted ? (
+          <div className="w-full min-h-[250px] px-5 md:px-0 animate-pulse flex flex-col space-y-3">
+            <Skeleton className="w-full h-[190px] rounded-lg" />
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-[90%]" />
+              <Skeleton className="h-6 w-[80%]" />
+            </div>
+          </div>
+        ) : isLoading || isUnauthenticated ? (
           <div className="text-center px-5 md:px-0">
             <h2 className="mb-3 text-3xl font-semibold text-pretty md:mb-4 md:text-4xl lg:mb-6 lg:max-w-3xl lg:text-5xl">
               News That Matters to You, Curated Intelligently
@@ -88,21 +103,23 @@ const Layout = ({ allNews }: Props) => {
           </div>
         ) : (
           <div className="px-5 md:px-0">
-            <h2 className="mb-3 text-3xl font-semibold text-pretty md:mb-4 md:text-4xl lg:mb-6 lg:max-w-3xl lg:text-5xl flex items-center gap-2">
-              Hottest News of the Day{" "}
-              <Flame className="w-[30px] h-[30px] md:w-[36px] md:h-[36px] lg:w-[48px] lg:h-[48px]" />
+            <h2 className="mb-3 text-3xl font-semibold text-pretty md:mb-4 md:text-4xl lg:mb-6 lg:max-w-3xl lg:text-5xl">
+              <span className="inline">{`Hottest News of the Day`}</span>
+              <span className="inline-block ml-2 align-middle">
+                <Flame className="w-[30px] h-[30px] md:w-[36px] md:h-[36px] lg:w-[48px] lg:h-[48px]" />
+              </span>
             </h2>
             <TopNewsCard news={allNews[0]} />
           </div>
         )}
 
         <Tabs defaultValue={tabs[0].value} className="w-full bg-transparent">
-          <TabsList className="w-full h-14 sticky top-0 z-50 bg-white shadow-sm mb-4 border-b rounded-none p-0 overflow-x-auto">
+          <TabsList className="w-full h-14 sticky top-0 z-50 bg-white mb-4 border-b rounded-none p-0 overflow-x-auto justify-start">
             {tabs.map((tab) => (
               <TabsTrigger
                 key={tab.title}
                 value={tab.value}
-                className="h-full w-full border-0 shadow-none rounded-none px-4 py-2 font-medium text-sm sm:text-base data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 text-gray-500 hover:text-gray-700"
+                className="h-full min-w-max border-0 shadow-none rounded-none px-4 py-2 font-medium text-sm sm:text-base data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 text-gray-500 hover:text-gray-700"
               >
                 {tab.icon}
                 {tab.title}
@@ -117,8 +134,12 @@ const Layout = ({ allNews }: Props) => {
             </div>
           </TabsContent>
           {tabs.slice(1).map((tab) => (
-            <TabsContent key={tab.title} value={tab.value}>
-              {tab.title} content goes here.
+            <TabsContent
+              key={tab.title}
+              value={tab.value}
+              className="min-h-[600px]"
+            >
+              {tab.title} will be available soon.
             </TabsContent>
           ))}
         </Tabs>
