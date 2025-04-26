@@ -85,7 +85,15 @@ const Layout = ({ allNews }: Props) => {
               <Skeleton className="h-6 w-[80%]" />
             </div>
           </div>
-        ) : isLoading || isUnauthenticated ? (
+        ) : isLoading ? (
+          <div className="w-full min-h-[250px] px-5 md:px-0 animate-pulse flex flex-col space-y-3">
+            <Skeleton className="w-full h-[190px] rounded-lg" />
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-[90%]" />
+              <Skeleton className="h-6 w-[80%]" />
+            </div>
+          </div>
+        ) : isUnauthenticated ? (
           <div className="text-center px-5 md:px-0">
             <h2 className="mb-3 text-3xl font-semibold text-pretty md:mb-4 md:text-4xl lg:mb-6 lg:max-w-3xl lg:text-5xl">
               News That Matters to You, Curated Intelligently

@@ -136,7 +136,7 @@ const NavBar = ({
   const handleLogout = async () => {
     try {
       await signOut({ redirect: false });
-      // window.location.reload();
+      window.location.reload();
     } catch (error) {
       const errorMessage =
         axios.isAxiosError(error) && error.response?.data?.message
