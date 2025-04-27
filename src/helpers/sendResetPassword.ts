@@ -1,5 +1,5 @@
 import React from "react";
-import { transporter } from "@/lib/email";
+import { createTransporter } from "@/lib/email";
 import ResetPasswordEmail from "@/../emails/resetPassword";
 import { ApiResponse } from "@/types/apiResponse";
 import { render } from "@react-email/components";
@@ -9,38 +9,40 @@ export const SendResetPassword = async (
   email: string,
   resetUrl: string
 ): Promise<ApiResponse> => {
+  const transporter = await createTransporter();
   try {
     const emailHtml = render(
       React.createElement(ResetPasswordEmail, { name, resetUrl })
     );
 
-    await transporter.sendMail(
-      {
-        from: `INA ${process.env.EMAIL_USER}`,
-        to: email,
-        subject: "Account Password Reset",
-        html: emailHtml,
-      },
-      function (error, info) {
-        if (error) {
-          console.log(error);
-          return {
-            success: false,
-            message: "Failed to send password reset link",
-          };
-        } else {
-          console.log("Email sent: " + info.response);
-          return {
-            success: true,
-            message: "Reset password link email sent successfully",
-          };
+    const mailResponse = await new Promise<ApiResponse>((resolve) => {
+      transporter.sendMail(
+        {
+          from: `INA <${process.env.EMAIL_USER}>`,
+          to: email,
+          subject: "Account Password Reset",
+          html: emailHtml,
+        },
+        function (error, info) {
+          if (error) {
+            console.log("ERROR", error);
+            resolve({
+              success: false,
+              message: "Failed to send password reset link",
+            });
+          } else {
+            console.log("Email sent: " + info.response);
+            resolve({
+              success: true,
+              message:
+                "Reset password link sent successfully on your email address",
+            });
+          }
         }
-      }
-    );
-    return {
-      success: true,
-      message: "Reset password link sent successfully on your email address",
-    };
+      );
+    });
+
+    return mailResponse;
   } catch (error) {
     console.error("Failed to send reset password link on email:", error);
 
