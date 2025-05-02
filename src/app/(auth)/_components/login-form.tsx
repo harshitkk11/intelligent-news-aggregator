@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginSchema } from "@/schemas/login";
-import { ApiResponse } from "@/types/apiResponse";
+// import { ApiResponse } from "@/types/apiResponse";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,12 +28,14 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
 import GoogleAuth from "./GoogleAuth";
-import { signIn } from "next-auth/react";
+import { useAuth } from "@/context/AuthContext";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const { signInWithEmail } = useAuth();
+
   const form = useForm<z.infer<typeof LoginSchema>>({
     resolver: zodResolver(LoginSchema),
     defaultValues: {
@@ -46,24 +48,26 @@ export function LoginForm({
 
   const onSubmit = async (values: z.infer<typeof LoginSchema>) => {
     try {
-      const response = await axios.post<ApiResponse<{ email: string }>>("/api/auth/login", values, {
-          withCredentials: true,
-        });
+      await signInWithEmail(values.email, values.password);
 
-      const { success, message, data: user } = response.data;
+      // const response = await axios.post<ApiResponse<{ email: string }>>("/api/auth/login", values, {
+      //     withCredentials: true,
+      //   });
 
-      if (!success || !user) {
-        throw new Error(message);
-      }
+      // const { success, message, data: user } = response.data;
 
-      await signIn("credentials", {
-        email: user.email,
-        password: "dummy-password", // Use a dummy since it's required
-        redirect: false,
-      });
+      // if (!success || !user) {
+      //   throw new Error(message);
+      // }
+
+      // await signIn("credentials", {
+      //   email: user.email,
+      //   password: "dummy-password", // Use a dummy since it's required
+      //   redirect: false,
+      // });
 
       form.reset();
-      window.location.href = `/`;
+      // window.location.href = `/`;
     } catch (error: unknown) {
       const errorMessage =
         axios.isAxiosError(error) && error.response?.data?.message

@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 import NewsCard from "./NewsCard";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@/context/AuthContext";
 import TopNewsCard from "./TopNewsCard";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -64,15 +64,12 @@ const tabs = [
 ];
 
 const Layout = ({ allNews }: Props) => {
-  const session = useSession();
+  const { user, loading } = useAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  const isLoading = session.status === "loading";
-  const isUnauthenticated = session.status === "unauthenticated";
 
   return (
     <section className="w-full py-12 px-0">
@@ -85,7 +82,7 @@ const Layout = ({ allNews }: Props) => {
               <Skeleton className="h-6 w-[80%]" />
             </div>
           </div>
-        ) : isLoading ? (
+        ) : loading ? (
           <div className="w-full min-h-[250px] px-5 md:px-0 animate-pulse flex flex-col space-y-3">
             <Skeleton className="w-full h-[190px] rounded-lg" />
             <div className="space-y-2">
@@ -93,7 +90,17 @@ const Layout = ({ allNews }: Props) => {
               <Skeleton className="h-6 w-[80%]" />
             </div>
           </div>
-        ) : isUnauthenticated ? (
+        ) : user ? (
+          <div className="w-full px-5 md:px-0">
+            <h2 className="mb-3 text-3xl font-semibold text-pretty md:mb-4 md:text-4xl lg:mb-6 lg:max-w-3xl lg:text-5xl">
+              <span className="inline">{`Hottest News of the Day`}</span>
+              <span className="inline-block ml-2 align-middle">
+                <Flame className="w-[30px] h-[30px] md:w-[36px] md:h-[36px] lg:w-[48px] lg:h-[48px]" />
+              </span>
+            </h2>
+            <TopNewsCard news={allNews[0]} />
+          </div>
+        ) : (
           <div className="text-center px-5 md:px-0">
             <h2 className="mb-3 text-3xl font-semibold text-pretty md:mb-4 md:text-4xl lg:mb-6 lg:max-w-3xl lg:text-5xl">
               News That Matters to You, Curated Intelligently
@@ -108,16 +115,6 @@ const Layout = ({ allNews }: Props) => {
                 <ArrowRight className="ml-2 size-4" />
               </Link>
             </Button>
-          </div>
-        ) : (
-          <div className="w-full px-5 md:px-0">
-            <h2 className="mb-3 text-3xl font-semibold text-pretty md:mb-4 md:text-4xl lg:mb-6 lg:max-w-3xl lg:text-5xl">
-              <span className="inline">{`Hottest News of the Day`}</span>
-              <span className="inline-block ml-2 align-middle">
-                <Flame className="w-[30px] h-[30px] md:w-[36px] md:h-[36px] lg:w-[48px] lg:h-[48px]" />
-              </span>
-            </h2>
-            <TopNewsCard news={allNews[0]} />
           </div>
         )}
 

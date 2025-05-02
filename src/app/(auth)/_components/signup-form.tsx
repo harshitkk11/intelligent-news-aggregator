@@ -1,11 +1,13 @@
 "use client";
 
 import React from "react";
+// import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ApiResponse } from "@/types/apiResponse";
+// import { ApiResponse } from "@/types/apiResponse";
 import { SignupSchema } from "@/schemas/signup";
 
 import { cn } from "@/lib/utils";
@@ -28,14 +30,14 @@ import {
 } from "@/components/ui/form";
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
 import GoogleAuth from "./GoogleAuth";
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const router = useRouter();
+  // const router = useRouter();
+  const { signUpWithEmail } = useAuth();
 
   const form = useForm<z.infer<typeof SignupSchema>>({
     resolver: zodResolver(SignupSchema),
@@ -50,24 +52,25 @@ export function SignUpForm({
 
   const onSubmit = async (values: z.infer<typeof SignupSchema>) => {
     try {
-      const response = await axios.post<
-        ApiResponse<{ userId: string; email: string }>
-      >("/api/auth/signup", values, {
-        withCredentials: true,
-      });
+      await signUpWithEmail(values.email, values.password, values.name);
+      // const response = await axios.post<
+      //   ApiResponse<{ userId: string; email: string }>
+      // >("/api/auth/signup", values, {
+      //   withCredentials: true,
+      // });
 
-      const { success, message, data } = response.data;
+      // const { success, message, data } = response.data;
 
-      if (!success) {
-        throw new Error(message);
-      }
+      // if (!success) {
+      //   throw new Error(message);
+      // }
 
-      if (!data) {
-        throw new Error("An unexpected error occurred during signup.");
-      }
+      // if (!data) {
+      //   throw new Error("An unexpected error occurred during signup.");
+      // }
 
       form.reset();
-      router.push(`/verify?id=${data.userId}&email=${data.email}`);
+      // router.push(`/verify?id=${data.userId}&email=${data.email}`);
     } catch (error: unknown) {
       const errorMessage =
         axios.isAxiosError(error) && error.response?.data?.message

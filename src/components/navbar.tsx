@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { signOut, useSession } from "next-auth/react";
-import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
 
 import {
   Accordion,
@@ -27,8 +26,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import Logo from "./Logo";
-import { toast } from "sonner";
 import { Book, LogOut, Menu, Sunset, Trees, Zap } from "lucide-react";
+import { Skeleton } from "./ui/skeleton";
 
 interface MenuItem {
   title: string;
@@ -126,28 +125,15 @@ const NavBar = ({
     signup: { title: "Sign up", url: "/signup" },
   },
 }: NavbarProps) => {
-  const session = useSession();
+  const { user, loading, signOut } = useAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const handleLogout = async () => {
-    try {
-      await signOut({ redirect: false });
-      window.location.reload();
-    } catch (error) {
-      const errorMessage =
-        axios.isAxiosError(error) && error.response?.data?.message
-          ? error.response.data.message
-          : error instanceof Error
-            ? error.message
-            : "An unexpected error occurred.";
-
-      console.error("An unexpected error occurred", error);
-      toast.error(errorMessage);
-    }
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
@@ -165,28 +151,34 @@ const NavBar = ({
             </NavigationMenu>
           </div>
         </div>
-        {mounted &&
-          session.status !== "loading" &&
-          (session.status === "unauthenticated" ? (
-            <div className="flex gap-2">
-              <Button asChild variant="outline" size="sm">
-                <a href={auth.login.url}>{auth.login.title}</a>
-              </Button>
-              <Button asChild size="sm">
-                <a href={auth.signup.url}>{auth.signup.title}</a>
-              </Button>
-            </div>
-          ) : (
-            <Button
-              onClick={handleLogout}
-              variant="ghost"
-              size="sm"
-              className="flex justify-start !px-2 !py-1.5 gap-2 cursor-pointer"
-            >
-              <LogOut className="!w-5 !h-5" />
-              Log out
+        {!mounted ? (
+          <div className="space-y-2 w-[100px] animate-pulse">
+            <Skeleton className="h-8 w-[100px] mx-auto" />
+          </div>
+        ) : loading ? (
+          <div className="space-y-2 w-[100px] animate-pulse">
+            <Skeleton className="h-8 w-[100px] mx-auto" />
+          </div>
+        ) : user ? (
+          <Button
+            onClick={handleSignOut}
+            variant="ghost"
+            size="sm"
+            className="flex justify-start !px-2 !py-1.5 gap-2 cursor-pointer"
+          >
+            <LogOut className="!w-5 !h-5" />
+            Log out
+          </Button>
+        ) : (
+          <div className="flex gap-2">
+            <Button asChild variant="outline" size="sm">
+              <a href={auth.login.url}>{auth.login.title}</a>
             </Button>
-          ))}
+            <Button asChild size="sm">
+              <a href={auth.signup.url}>{auth.signup.title}</a>
+            </Button>
+          </div>
+        )}
       </nav>
 
       {/* Mobile Menu */}
@@ -215,27 +207,33 @@ const NavBar = ({
                   {menu.map((item) => renderMobileMenuItem(item))}
                 </Accordion>
 
-                {mounted &&
-                  session.status !== "loading" &&
-                  (session.status === "unauthenticated" ? (
-                    <div className="flex flex-col gap-3">
-                      <Button asChild variant="outline" size="sm">
-                        <a href={auth.login.url}>{auth.login.title}</a>
-                      </Button>
-                      <Button asChild size="sm">
-                        <a href={auth.signup.url}>{auth.signup.title}</a>
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      onClick={handleLogout}
-                      size="sm"
-                      className="w-full flex justify-center !px-2 !py-1.5 gap-2 cursor-pointer"
-                    >
-                      <LogOut className="!w-5 !h-5" />
-                      Log out
+                {mounted ? (
+                  <div className="space-y-2 w-[100px] animate-pulse">
+                    <Skeleton className="h-8 w-[100px] mx-auto" />
+                  </div>
+                ) : loading ? (
+                  <div className="space-y-2 w-full animate-pulse">
+                    <Skeleton className="h-8 w-full mx-auto" />
+                  </div>
+                ) : user ? (
+                  <Button
+                    onClick={handleSignOut}
+                    size="sm"
+                    className="w-full flex justify-center !px-2 !py-1.5 gap-2 cursor-pointer"
+                  >
+                    <LogOut className="!w-5 !h-5" />
+                    Log out
+                  </Button>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    <Button asChild variant="outline" size="sm">
+                      <a href={auth.login.url}>{auth.login.title}</a>
                     </Button>
-                  ))}
+                    <Button asChild size="sm">
+                      <a href={auth.signup.url}>{auth.signup.title}</a>
+                    </Button>
+                  </div>
+                )}
               </div>
             </SheetContent>
           </Sheet>

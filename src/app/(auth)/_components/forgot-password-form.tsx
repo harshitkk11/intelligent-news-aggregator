@@ -2,7 +2,8 @@
 
 import React from "react";
 
-import { ApiResponse } from "@/types/apiResponse";
+import { useAuth } from "@/context/AuthContext";
+// import { ApiResponse } from "@/types/apiResponse";
 import { ForgotPasswordSchema } from "@/schemas/forgotPassword";
 
 import Link from "next/link";
@@ -37,6 +38,7 @@ export function ForgotPasswordForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const { resetPassword } = useAuth();
   const form = useForm<z.infer<typeof ForgotPasswordSchema>>({
     resolver: zodResolver(ForgotPasswordSchema),
     defaultValues: {
@@ -48,19 +50,21 @@ export function ForgotPasswordForm({
 
   const onSubmit = async (values: z.infer<typeof ForgotPasswordSchema>) => {
     try {
-      const response = await axios.post<ApiResponse>(
-        "/api/auth/forgot",
-        values
-      );
+      const reset = await resetPassword(values.email);
+      // const response = await axios.post<ApiResponse>(
+      //   "/api/auth/forgot",
+      //   values
+      // );
 
-      const { success, message } = response.data;
+      // const { success, message } = response.data;
 
-      if (!success) {
-        throw new Error(message);
-      }
+      // if (!success) {
+      //   throw new Error(message);
+      // }
 
       form.reset();
-      toast.success(message);
+      toast.success("Password reset link sent to email");
+      console.log(reset)
     } catch (error: unknown) {
       const errorMessage =
         axios.isAxiosError(error) && error.response?.data?.message

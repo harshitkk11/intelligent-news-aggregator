@@ -50,7 +50,7 @@ const TopNewsCard = ({ news }: Props) => {
             className="h-[300px] w-full object-cover object-center rounded-t-lg"
           />
         </div>
-        <span className="absolute top-4 left-4 px-2 py-1 bg-white/90 rounded-md text-sm font-medium z-10">
+        <span className="absolute top-4 left-4 px-2 py-1 bg-white/90 rounded-md text-sm font-medium z-10 capitalize">
           {news.category}
         </span>
       </div>
@@ -82,7 +82,7 @@ const TopNewsCard = ({ news }: Props) => {
       </CardContent>
       <div className="px-4 sm:px-6 pt-5 flex justify-between">
         <span
-          className={`w-auto text-xs px-2 py-1 rounded-full ${getSentimentColor()}`}
+          className={`w-auto text-xs px-2 py-1 rounded-full ${getSentimentColor()} capitalize`}
         >
           {news.sentiment_label}
         </span>

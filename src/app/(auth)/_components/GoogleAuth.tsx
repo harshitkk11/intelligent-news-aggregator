@@ -2,8 +2,8 @@
 
 import React, { FC, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { signIn } from "next-auth/react";
 import { LoaderCircle } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 interface GoogleAuthProps {
   title: string;
@@ -12,14 +12,16 @@ interface GoogleAuthProps {
 
 const GoogleAuth: FC<GoogleAuthProps> = ({ title, isDisabled }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { signInWithGoogle } = useAuth();
 
   const handleClick = async () => {
     setIsLoading(true);
 
     try {
-      await signIn("google", {
-        redirectTo: "/",
-      });
+      await signInWithGoogle();
+      // await signIn("google", {
+      //   redirectTo: "/",
+      // });
     } catch (error: unknown) {
       console.error("An unexpected error occurred", error);
     } finally {
