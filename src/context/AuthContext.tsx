@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           if (redirectUrl && window.location.pathname !== redirectUrl) {
             router.push(redirectUrl);
           } else if (!redirectUrl && window.location.pathname === "/login") {
-            // If no redirect specified and on auth page, go home
+            // If no redirect specified and on login page, go home
             router.push("/");
           }
         } catch (error) {
@@ -182,6 +182,29 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (!user.emailVerified) {
         await firebaseSignOut(auth);
         throw new Error("Please verify your email before logging in.");
+      }
+
+      if (user.emailVerified) {
+        const response = await axios.post<
+          ApiResponse<{
+            data: { isNew: boolean };
+          }>
+        >(
+          "/api/user/statusUpdate",
+          { userId: user.uid },
+          {
+            withCredentials: true,
+          }
+        );
+        const { success, message } = response.data;
+
+        if (!success) {
+          console.log(message);;
+        }
+
+        if (success && message === "Status updated.") {
+          router.push("/preferences")
+        }
       }
       // Redirect is now handled by onAuthStateChanged
     } catch (error: unknown) {

@@ -37,7 +37,9 @@ export async function middleware(request: NextRequest) {
   // This is NOT a security verification.
   const hasToken = hasPotentiallyValidTokenStructure(token);
 
-  const isPublicPath = publicPaths.some((path) => pathname.startsWith(path));
+  const isPublicPath = publicPaths.some(
+    (path) => path === pathname || pathname.startsWith(`${path}/`)
+  );
 
   // If user *appears* unauthenticated (no valid-looking token cookie) and trying to access a protected route
   if (!hasToken && !isPublicPath) {

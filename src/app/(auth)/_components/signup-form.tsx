@@ -7,7 +7,6 @@ import axios from "axios";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-// import { ApiResponse } from "@/types/apiResponse";
 import { SignupSchema } from "@/schemas/signup";
 
 import { cn } from "@/lib/utils";
@@ -53,24 +52,8 @@ export function SignUpForm({
   const onSubmit = async (values: z.infer<typeof SignupSchema>) => {
     try {
       await signUpWithEmail(values.email, values.password, values.name);
-      // const response = await axios.post<
-      //   ApiResponse<{ userId: string; email: string }>
-      // >("/api/auth/signup", values, {
-      //   withCredentials: true,
-      // });
-
-      // const { success, message, data } = response.data;
-
-      // if (!success) {
-      //   throw new Error(message);
-      // }
-
-      // if (!data) {
-      //   throw new Error("An unexpected error occurred during signup.");
-      // }
 
       form.reset();
-      // router.push(`/verify?id=${data.userId}&email=${data.email}`);
     } catch (error: unknown) {
       const errorMessage =
         axios.isAxiosError(error) && error.response?.data?.message
