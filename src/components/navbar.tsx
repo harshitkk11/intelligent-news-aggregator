@@ -207,9 +207,9 @@ const NavBar = ({
                   {menu.map((item) => renderMobileMenuItem(item))}
                 </Accordion>
 
-                {mounted ? (
-                  <div className="space-y-2 w-[100px] animate-pulse">
-                    <Skeleton className="h-8 w-[100px] mx-auto" />
+                {!mounted ? (
+                  <div className="space-y-2 w-full animate-pulse">
+                    <Skeleton className="h-8 w-full mx-auto" />
                   </div>
                 ) : loading ? (
                   <div className="space-y-2 w-full animate-pulse">
