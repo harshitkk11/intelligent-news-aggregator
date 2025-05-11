@@ -24,8 +24,10 @@ import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
-import axios from "axios";
 import { ApiResponse } from "@/types/apiResponse";
+import api from "@/lib/axiosInstance";
+
+const AUTH_COOKIE_NAME = "auth-token";
 
 type AuthContextType = {
   user: User | null;
@@ -40,8 +42,6 @@ type AuthContextType = {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
 };
-
-const AUTH_COOKIE_NAME = "auth-token";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -98,26 +98,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
 
     return () => unsubscribe();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]); // router dependency might not be strictly needed here anymore
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      const userCredential = await signInWithPopup(auth, provider);
+      const { user } = await signInWithPopup(auth, provider);
 
-      const user = userCredential.user;
-
-      const response = await axios.post<ApiResponse>(
-        "/api/auth/signup",
-        { userId: user.uid },
-        {
-          withCredentials: true,
-        }
+      const { data: createData } = await api.post<ApiResponse>(
+        "/api/user/create-user",
+        { userId: user.uid }
       );
-      const { success, message } = response.data;
 
-      if (!success) {
-        console.log(message);
+      if (createData.success) {
+        const { data: updateData } = await api.patch<
+          ApiResponse<{
+            data: { isNew: boolean };
+          }>
+        >("/api/user/update-status", { userId: user.uid });
+
+        if (updateData.success && updateData.message === "Status updated.") {
+          router.push("/preferences");
+        }
+      } else {
+        router.push("/");
       }
 
       // Redirect is now handled by onAuthStateChanged
@@ -133,22 +138,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     name: string
   ) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(
+      const { user } = await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
 
-      const user = userCredential.user;
-
       await updateProfile(user, { displayName: name });
-      await axios.post<ApiResponse>(
-        "/api/auth/signup",
-        { userId: user.uid },
-        {
-          withCredentials: true,
-        }
-      );
+      await api.post<ApiResponse>("/api/user/create-user", {
+        userId: user.uid,
+      });
 
       await sendEmailVerification(user);
       await firebaseSignOut(auth);
@@ -172,12 +171,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const user = userCredential.user;
+      const { user } = await signInWithEmailAndPassword(auth, email, password);
 
       if (!user.emailVerified) {
         await firebaseSignOut(auth);
@@ -185,25 +179,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (user.emailVerified) {
-        const response = await axios.post<
+        const { data } = await api.patch<
           ApiResponse<{
             data: { isNew: boolean };
           }>
-        >(
-          "/api/user/statusUpdate",
-          { userId: user.uid },
-          {
-            withCredentials: true,
-          }
-        );
-        const { success, message } = response.data;
+        >("/api/user/update-status", { userId: user.uid });
 
-        if (!success) {
-          console.log(message);;
-        }
-
-        if (success && message === "Status updated.") {
-          router.push("/preferences")
+        if (data.success && data.message === "Status updated.") {
+          router.push("/preferences");
         }
       }
       // Redirect is now handled by onAuthStateChanged
