@@ -37,7 +37,7 @@ const NewsModal: React.FC<NewsModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger>{children}</DialogTrigger>
+      <DialogTrigger className="w-full">{children}</DialogTrigger>
       <DialogContent className="h-full flex flex-col gap-4 overflow-auto">
         <DialogHeader className="space-y-3">
           <div className="pt-6 flex justify-between items-center mb-2">

@@ -132,8 +132,8 @@ const Layout = ({ allNews }: Props) => {
             ))}
           </TabsList>
           <TabsContent value={tabs[0].value} className="px-5 md:px-0">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
-              {allNews.map((news) => (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8 items-start">
+              {allNews.slice(1).map((news) => (
                 <NewsCard key={news.id} news={news} />
               ))}
             </div>
