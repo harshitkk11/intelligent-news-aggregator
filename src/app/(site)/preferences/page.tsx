@@ -1,67 +1,72 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import api from "@/lib/axiosInstance";
+import { ApiResponse } from "@/types/apiResponse";
+import { getAuth } from "firebase/auth";
+import { toast } from "sonner";
+
+interface Category {
+  categoryId: string;
+  categoryName: string;
+}
 
 export default function UserPreferencesPage() {
-  const [categories, setCategories] = useState([
-    { id: 1, name: "Technology", icon: "💻", selected: false },
-    { id: 2, name: "Business", icon: "💼", selected: false },
-    { id: 3, name: "Politics", icon: "🏛️", selected: false },
-    { id: 4, name: "Health", icon: "🩺", selected: false },
-    { id: 5, name: "Science", icon: "🔬", selected: false },
-    { id: 6, name: "Sports", icon: "🏆", selected: false },
-    { id: 7, name: "Entertainment", icon: "🎬", selected: false },
-    { id: 8, name: "World News", icon: "🌎", selected: false },
-    { id: 9, name: "Finance", icon: "💰", selected: false },
-    { id: 10, name: "Travel", icon: "✈️", selected: false },
-    { id: 11, name: "Food", icon: "🍽️", selected: false },
-    { id: 12, name: "Fashion", icon: "👗", selected: false },
-    { id: 13, name: "Culture", icon: "🎭", selected: false },
-    { id: 14, name: "Education", icon: "🎓", selected: false },
-    { id: 15, name: "Environment", icon: "🌱", selected: false },
-  ]);
-
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [activeStep, setActiveStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [saveStatus, setSaveStatus] = useState("");
-  console.log(saveStatus);
+
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  useEffect(() => {
+    const getCategories = async () => {
+      const response = await api.get("/api/categories/fetch_categories");
+      const fetchedCategories = response.data ?? [];
+      setCategories(fetchedCategories);
+    };
+    getCategories();
+  }, []);
 
   const router = useRouter();
 
-  const toggleCategorySelection = (id: number) => {
-    setCategories(
-      categories.map((category) =>
-        category.id === id
-          ? { ...category, selected: !category.selected }
-          : category
-      )
-    );
+  const handleSelectedCategory = (id: string) => {
+    if (selectedCategories.includes(id)) {
+      setSelectedCategories([
+        ...selectedCategories.filter((categoryId) => categoryId !== id),
+      ]);
+    } else {
+      setSelectedCategories([...selectedCategories, id]);
+    }
   };
 
-  const savePreferences = () => {
+  const savePreferences = async () => {
     setLoading(true);
 
-    // Simulate API call with a delay
-    setTimeout(() => {
-      const selectedCategories = categories
-        .filter((category) => category.selected)
-        .map(({ id, name }) => ({ id, name }));
+    try {
+      if (!user) {
+        setLoading(false);
+        toast.error("Something went wrong!!");
+        return;
+      }
 
-      console.log("Saving preferences:", selectedCategories);
+      const { data } = await api.patch<ApiResponse>("/api/user/preference", {
+        userId: user.uid,
+        preference: selectedCategories,
+      });
 
-      // In a real app, you would send this data to your API
-      // Example: await fetch('/api/user/preferences', { method: 'POST', body: JSON.stringify(selectedCategories) })
-
-      setSaveStatus("success");
-      setLoading(false);
-      setActiveStep(2);
-
-      // Clear status message after 3 seconds
-      setTimeout(() => setSaveStatus(""), 3000);
-    }, 1500);
+      if (data.success) {
+        setLoading(false);
+        setActiveStep(2);
+      }
+    } catch (error) {
+      console.log(error);
+      toast.error("Something went wrong!!");
+    }
   };
 
   // Step content based on active step
@@ -73,14 +78,14 @@ export default function UserPreferencesPage() {
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
               {categories.map((category) => (
                 <div
-                  key={category.id}
-                  onClick={() => toggleCategorySelection(category.id)}
+                  key={category.categoryId}
+                  onClick={() => handleSelectedCategory(category.categoryId)}
                   className={`relative flex flex-col items-center justify-center gap-3 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105`}
                 >
-                  <div className="aspect-square transition-opacity duration-200 fade-in hover:opacity-90">
+                  <div className="w-[220px] h-[220px] aspect-square transition-opacity rounded-lg duration-200 fade-in hover:opacity-90 border">
                     <Image
-                      src={"/news.jpg"}
-                      alt="Category"
+                      src={`/${category.categoryName}.jpg`}
+                      alt={category.categoryName}
                       width={500}
                       height={300}
                       className="h-full w-full object-cover object-center rounded-lg"
@@ -88,11 +93,11 @@ export default function UserPreferencesPage() {
                   </div>
 
                   <div className="text-sm font-medium text-center hover:font-semibold">
-                    {category.name}
+                    {category.categoryName}
                   </div>
 
-                  {category.selected && (
-                    <div className="absolute top-2 right-2 bg-blue-600 rounded-full p-1">
+                  {selectedCategories.includes(category.categoryId) && (
+                    <div className="absolute top-2 right-4 bg-blue-600 rounded-full p-1">
                       <Check size={12} className="text-white" />
                     </div>
                   )}
@@ -101,13 +106,16 @@ export default function UserPreferencesPage() {
             </div>
 
             <div className="mt-8 flex justify-between items-center">
-              <div className="text-black font-medium">
-                {categories.filter((c) => c.selected).length} topics selected
+              <div className="py-2 px-[14px] flex items-center gap-3 rounded-full border border-blue-600 text-blue-600 font-bold">
+                <div className="w-6 h-6 flex justify-center items-center bg-blue-600 rounded-full p-1">
+                  <Check size={12} className="text-white" />
+                </div>
+                {selectedCategories.length} topics selected
               </div>
               <button
                 onClick={savePreferences}
                 disabled={loading}
-                className="flex items-center px-6 py-2 rounded-full bg-blue-800 text-white hover:bg-blue-600 text-sm font-medium transition-all"
+                className="flex items-center px-6 py-2 rounded-xl bg-blue-800 text-white hover:bg-blue-600 font-medium transition-all"
               >
                 {loading ? (
                   <>
