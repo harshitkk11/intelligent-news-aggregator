@@ -53,10 +53,10 @@ interface NavbarProps {
 
 const NavBar = ({
   menu = [
-    { title: "Home", url: "#" },
+    { title: "Home", url: "/" },
     {
       title: "Categorties",
-      url: "#",
+      url: "/preferences",
       items: [
         {
           title: "Blog",
