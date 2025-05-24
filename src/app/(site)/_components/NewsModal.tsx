@@ -10,6 +10,8 @@ import {
 import { News } from "./Layout";
 import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 interface NewsModalProps {
   children: React.ReactNode;
@@ -24,6 +26,8 @@ const NewsModal: React.FC<NewsModalProps> = ({
   setIsOpen,
   news,
 }) => {
+  const router = useRouter();
+
   const getSentimentColor = () => {
     switch (news.sentiment_label) {
       case "positive":
@@ -41,7 +45,7 @@ const NewsModal: React.FC<NewsModalProps> = ({
       <DialogContent className="h-full flex flex-col gap-4 overflow-auto">
         <DialogHeader className="space-y-3">
           <div className="pt-6 flex justify-between items-center mb-2">
-            <div className="text-sm md:text-base text-gray-500">
+            <div className="text-sm md:text-base text-gray-500 text-start">
               <span className="text-wrap">{news.source}</span> •{" "}
               <span className="text-nowrap">
                 {news.published_at
@@ -57,7 +61,7 @@ const NewsModal: React.FC<NewsModalProps> = ({
               {news.sentiment_label}
             </span>
           </div>
-          <div className="transition-opacity duration-200 fade-in hover:opacity-90">
+          <div>
             <Image
               src={news.image_url}
               alt={news.title}
@@ -66,13 +70,20 @@ const NewsModal: React.FC<NewsModalProps> = ({
               className="h-full w-full object-cover object-center rounded-lg"
             />
           </div>
-          <DialogTitle>{news.title}</DialogTitle>
+          <DialogTitle className="text-lg md:text-2xl font-semibold">{news.title}</DialogTitle>
           <DialogDescription>{news.description}</DialogDescription>
         </DialogHeader>
         <div className="border rounded-lg p-2 space-y-2">
-          <h3 className="font-semibold">Summary</h3>
-          <p className="text-sm">{news.summary}</p>
+          <h3 className="text-base md:text-lg font-semibold">Summary</h3>
+          <p className="text-sm sm:text-base">{news.summary}</p>
         </div>
+
+        <Button
+          onClick={() => router.push(news.link)}
+          className="bg-blue-600 hover:bg-blue-700 text-base font-bold cursor-pointer"
+        >
+          Read more
+        </Button>
       </DialogContent>
     </Dialog>
   );

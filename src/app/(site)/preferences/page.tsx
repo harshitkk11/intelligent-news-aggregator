@@ -82,7 +82,7 @@ export default function UserPreferencesPage() {
                   onClick={() => handleSelectedCategory(category.categoryId)}
                   className={`relative flex flex-col items-center justify-center gap-3 rounded-lg cursor-pointer transition-all duration-300 hover:scale-105`}
                 >
-                  <div className="w-[220px] h-[220px] aspect-square transition-opacity rounded-lg duration-200 fade-in hover:opacity-90 border">
+                  <div className="w-[150px] h-[150px] sm:w-[220px] sm:h-[220px] aspect-square transition-opacity rounded-lg duration-200 fade-in hover:opacity-90 border">
                     <Image
                       src={`/${category.categoryName}.jpg`}
                       alt={category.categoryName}
@@ -106,7 +106,7 @@ export default function UserPreferencesPage() {
             </div>
 
             <div className="mt-8 flex justify-between items-center">
-              <div className="py-2 px-[14px] flex items-center gap-3 rounded-full border border-blue-600 text-blue-600 font-bold">
+              <div className="py-2 px-[14px] flex items-center gap-2 sm:gap-3 rounded-full border border-blue-600 text-blue-600 font-bold text-xs sm:text-base">
                 <div className="w-6 h-6 flex justify-center items-center bg-blue-600 rounded-full p-1">
                   <Check size={12} className="text-white" />
                 </div>
@@ -115,7 +115,7 @@ export default function UserPreferencesPage() {
               <button
                 onClick={savePreferences}
                 disabled={loading}
-                className="flex items-center px-6 py-2 rounded-xl bg-blue-800 text-white hover:bg-blue-600 font-medium transition-all"
+                className="flex items-center px-6 py-2 rounded-xl bg-blue-800 text-white hover:bg-blue-600 font-medium transition-all text-sm sm:text-base"
               >
                 {loading ? (
                   <>

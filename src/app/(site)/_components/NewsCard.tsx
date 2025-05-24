@@ -11,7 +11,7 @@ import Image from "next/image";
 // import { ArrowRight } from "lucide-react";
 import { News } from "./Layout";
 import { formatDistanceToNow } from "date-fns";
-import { Clock } from "lucide-react";
+// import { Clock } from "lucide-react";
 import NewsModal from "./NewsModal";
 
 interface Props {
@@ -45,13 +45,15 @@ const NewsCard = ({ news }: Props) => {
             //   target="_blank"
             className="transition-opacity duration-200 fade-in hover:opacity-90"
           >
-            <Image
-              src={news.image_url}
-              alt={news.title}
-              width={500}
-              height={300}
-              className="h-full w-full object-cover object-center rounded-t-lg"
-            />
+            {news.image_url && (
+              <Image
+                src={news.image_url}
+                alt={news.title}
+                width={500}
+                height={300}
+                className="h-full w-full object-cover object-center rounded-t-lg"
+              />
+            )}
           </div>
           <span className="absolute top-4 left-4 px-2 py-1 bg-white/90 rounded-md text-sm font-medium z-10 capitalize">
             {news.category}
@@ -71,14 +73,14 @@ const NewsCard = ({ news }: Props) => {
           </div>
         </div>
         <CardHeader className="px-4 sm:px-6">
-          <h3 className="text-lg sm:text-xl font-semibold hover:underline text-start">
+          <h3 className="text-lg sm:text-xl font-semibold hover:underline text-start h-[85px] overflow-hidden line-clamp-3">
             {/* <a href={news.url} target="_blank"> */}
             {news.title}
             {/* </a> */}
           </h3>
         </CardHeader>
         <CardContent className="px-4 sm:px-6 text-start">
-          <p className="text-muted-foreground">{news.description}</p>
+          <p className="text-muted-foreground h-30 overflow-hidden line-clamp-5 text-sm sm:text-base">{news.description}</p>
         </CardContent>
         <div className="px-4 sm:px-6 pt-5 flex justify-between">
           <span
@@ -86,9 +88,9 @@ const NewsCard = ({ news }: Props) => {
           >
             {news.sentiment_label}
           </span>
-          <span className="text-nowrap text-sm md:text-base text-gray-500 flex items-center gap-1">
+          {/* <span className="text-nowrap text-sm md:text-base text-gray-500 flex items-center gap-1">
             <Clock className="w-4 h-4" /> {news.read_time} min read
-          </span>
+          </span> */}
         </div>
         {/* <CardFooter>
         <div

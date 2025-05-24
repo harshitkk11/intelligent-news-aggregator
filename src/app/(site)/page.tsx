@@ -1,15 +1,9 @@
-import { newsItems } from "./_components/data";
 import Layout from "./_components/Layout";
 
-export default function Home() {
-  const formattedNewsItems = newsItems.map((item) => ({
-    ...item,
-    publishedDate: new Date(item.published_at),
-  }));
-
+export default async function Home() {
   return (
     <main className="w-full border">
-      <Layout allNews={formattedNewsItems} />
+      <Layout />
     </main>
   );
 }
