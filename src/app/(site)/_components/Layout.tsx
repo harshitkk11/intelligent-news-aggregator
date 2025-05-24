@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, JSX } from "react";
 import {
   ArrowRight,
   Bookmark,
@@ -76,7 +76,7 @@ const NewsCardSkeleton = memo(() => (
 NewsCardSkeleton.displayName = "NewsCardSkeleton";
 
 // Memoized tab trigger component
-const CustomTabsTrigger = memo(({ tab }) => (
+const CustomTabsTrigger = memo(({ tab }: { tab: { title: string; icon: JSX.Element; value: string } }) => (
   <TabsTrigger
     value={tab.value}
     className="h-full min-w-max border-0 shadow-none rounded-none px-4 py-2 font-medium text-sm sm:text-base data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 text-gray-500 hover:text-gray-700"
@@ -191,7 +191,7 @@ const Layout = () => {
                 <Flame className="w-[30px] h-[30px] md:w-[36px] md:h-[36px] lg:w-[48px] lg:h-[48px]" />
               </span>
             </h2>
-            {topNews && <TopNewsCard news={topNews} />}
+            {topNews && <MemoizedTopNewsCard news={topNews} />}
           </div>
         ) : (
           <div className="text-center px-5 md:px-0">
@@ -228,7 +228,7 @@ const Layout = () => {
           <TabsContent value={tabs[0].value} className="px-5 md:px-0">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8 items-start">
               {remainingNews.map((news) => (
-                <NewsCard key={news.id} news={news} />
+                <MemoizedNewsCard key={news.id} news={news} />
               ))}
             </div>
           </TabsContent>
