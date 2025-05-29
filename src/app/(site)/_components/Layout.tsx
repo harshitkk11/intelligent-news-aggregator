@@ -76,15 +76,17 @@ const NewsCardSkeleton = memo(() => (
 NewsCardSkeleton.displayName = "NewsCardSkeleton";
 
 // Memoized tab trigger component
-const CustomTabsTrigger = memo(({ tab }: { tab: { title: string; icon: JSX.Element; value: string } }) => (
-  <TabsTrigger
-    value={tab.value}
-    className="h-full min-w-max border-0 shadow-none rounded-none px-4 py-2 font-medium text-sm sm:text-base data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 text-gray-500 hover:text-gray-700"
-  >
-    {tab.icon}
-    {tab.title}
-  </TabsTrigger>
-));
+const CustomTabsTrigger = memo(
+  ({ tab }: { tab: { title: string; icon: JSX.Element; value: string } }) => (
+    <TabsTrigger
+      value={tab.value}
+      className="h-full min-w-max border-0 shadow-none rounded-none px-4 py-2 font-medium text-sm sm:text-base data-[state=active]:text-blue-600 data-[state=active]:border-b-2 data-[state=active]:border-blue-600 text-gray-500 hover:text-gray-700"
+    >
+      {tab.icon}
+      {tab.title}
+    </TabsTrigger>
+  )
+);
 
 CustomTabsTrigger.displayName = "CustomTabsTrigger";
 
@@ -104,13 +106,16 @@ const Layout = () => {
 
   // Fetch news function - extracted as a useCallback to prevent recreation on every render
   const fetchNews = useCallback(async () => {
-    if (!user?.uid) return;
-
     setFetching(true);
     try {
-      const response = await api.post("/api/user/fetch-news", {
-        userId: user?.uid,
-      });
+      let response;
+      if (user?.uid) {
+        response = await api.post("/api/user/fetch-news", {
+          userId: user?.uid,
+        });
+      } else {
+        response = await api.post("/api/user/fetch-news", {});
+      }
 
       if (response.data.success) {
         setAllNews(response.data.news || []);
@@ -125,10 +130,10 @@ const Layout = () => {
 
   // Effect to fetch news when user is available
   useEffect(() => {
-    if (user?.uid && mounted) {
+    if (mounted) {
       fetchNews();
     }
-  }, [user?.uid, fetchNews, mounted]);
+  }, [fetchNews, mounted]);
 
   // Memoize the formatted news items to prevent recalculation on every render
   const formattedNewsItems = useMemo(() => {
